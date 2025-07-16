@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Management</title>
+<script
+	src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+	integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+	crossorigin="anonymous"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+	integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+	crossorigin="anonymous"></script>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+	crossorigin="anonymous">
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+	integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+	crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.js"
+	integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+	crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css"
+	href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<!-- DataTables JS -->
+<script type="text/javascript" charset="utf8"
+	src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+</head>
+<style>
+.form-group {
+	margin-bottom: 10px; /* Adjust the value for more or less space */
+}
+
+.form-group {
+	margin-bottom: 10px; /* Adjust the value for more or less space */
+}
+
+.table-custom {
+	border: 1px solid #ddd;
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+.table-custom th, .table-custom td {
+	text-align: center;
+	padding: 15px;
+	vertical-align: middle;
+}
+
+.table-custom thead {
+	background-color: #f8f9fa;
+}
+
+.table-custom tbody tr:hover {
+	background-color: #f1f1f1;
+}
+
+.table-custom td.actions {
+	display: flex;
+	justify-content: center;
+}
+
+.table-custom td.actions button {
+	margin: 0 5px;
+}
+
+/* Adding grid-like display */
+.table-custom th, .table-custom td {
+	border-right: 1px solid #ddd;
+}
+
+.table-custom th:last-child, .table-custom td:last-child {
+	border-right: none;
+}
+#success-msg {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 2px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1;
+    right: 30px; /* Position the toast at the right side */
+    top: 30px; /* Position the toast at the top */
+    font-size: 17px;
+    transform: translateX(100%); /* Start off-screen to the right */
+}
+
+#success-msg.show {
+    visibility: visible;
+    transform: translateX(0); /* Slide to the final position */
+    -webkit-animation: slidein 0.5s ease-out, slideout 0.5s 2.5s ease-out;
+    animation: slidein 0.5s ease-out, slideout 0.5s 2.5s ease-out;
+}
+
+@keyframes slidein {
+    from {
+        transform: translateX(100%); /* Start off the screen to the right */
+    }
+    to {
+        transform: translateX(0); /* Slide to its final position */
+    }
+}
+
+@keyframes slideout {
+    from {
+        transform: translateX(0); /* Start from its final position */
+    }
+    to {
+        transform: translateX(100%); /* Slide off-screen to the right */
+    }
+}
+
+</style>
+<body>
+	<div></div>
+	<h1 style="text-align: center;">Create or Update Student</h1>
+	<div id="success-msg"></div>
+	<div class="container">
+		<div class="row justify-content-center">
+			<form id="createUserForm" class="col-md-6">
+				<div class="form-group">
+					<input type="hidden" id="studentId" />
+					<!-- Hidden field for student ID -->
+					<input type="text" id="name" placeholder="Name"
+						class="form-control" required>
+				</div>
+				<div class="form-group">
+					<input type="text" id="college" placeholder="College"
+						class="form-control" required>
+				</div>
+				<div class="form-group">
+					<textarea class="form-control" placeholder="Address" id="address"></textarea>
+				</div>
+				<div class="form-group text-center">
+					<button type="submit" class="btn btn-primary">Register
+						Here</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<div class="container mt-5">
+		<h2 class="text-center mb-4">Student List</h2>
+		<table id="studentList"
+			class="table table-striped table-bordered table-hover table-custom">
+			<thead>
+				<tr>
+					<th>Id</th>
+					<th>Name</th>
+					<th>College</th>
+					<th>Address</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<!-- Student list will be appended here -->
+			</tbody>
+		</table>
+	</div>
+</body>
+</html>
+
+<script>
+function fetchStudentList() {
+    $.ajax({
+        url: '/studentList',
+        type: 'GET',
+        success: function(response) {
+            var table = $('#studentList').DataTable();
+            table.clear();  // Clear any existing rows
+            let studentIdCounter = 1;
+
+            // Add new rows
+            response.forEach(function(student) {
+                table.row.add([
+                    studentIdCounter,
+                    student.name,
+                    student.college,
+                    student.address,
+                    "<button class='btn btn-primary' onclick='editStudent(" + student.id + ")'>Edit</button> | " +
+                    "<button class='btn btn-danger' onclick='deleteStudent(" + student.id + ")'>Delete</button>"
+                ]).draw(false);
+
+                studentIdCounter++;
+            });
+        },
+        error: function(xhr, status, error) {
+            alert("Error fetching student list: " + error);
+        }
+    });
+}
+
+    function editStudent(id) {
+        $.ajax({
+            url: '/studentList',
+            type: 'GET',
+            success: function(response) {
+                var student = response.find(s => s.id === id);
+                if (student) {
+                    $("#studentId").val(student.id); 
+                    $("#name").val(student.name); 
+                    $("#college").val(student.college);
+                    $("#address").val(student.address);
+                }
+            }
+        });
+    }
+
+    $("#createUserForm").submit(function(event) {
+        event.preventDefault();
+        var studentId = $("#studentId").val();
+        var name = $("#name").val();
+        var college = $("#college").val();
+        var address = $("#address").val();
+
+        var studentData = {
+            name: name,
+            college: college,
+            address: address,
+        };
+        if (studentId) {
+            $.ajax({
+                url: '/updateStudent/' + studentId,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(studentData),
+                success: function(response) {
+                    clearForm();
+                    fetchStudentList();
+                    showSuccessMessage(response.message);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error updating student: " + error);
+                }
+            });
+        } else {
+            $.ajax({
+                url: '/saveStudent',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(studentData),
+                success: function(response) {
+                    clearForm();
+                    fetchStudentList();
+                    showSuccessMessage(response.message);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error creating student: " + error);
+                }
+            });
+        }
+    });
+    
+    function deleteStudent(id) {
+        if (confirm('Are you sure you want to delete this student?')) {
+            $.ajax({
+                url: '/deleteStudent/' + id,
+                type: 'DELETE',
+                success: function(response) {
+                 
+                    fetchStudentList();
+                    showSuccessMessage(response.message);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error deleting student: " + error);
+                }
+            });
+        }
+    }
+
+    function clearForm() {
+        $("#studentId").val("");
+        $("#name").val("");
+        $("#college").val("");
+        $("#address").val("");
+    }
+
+    function showSuccessMessage(message) {
+    	var $success = $('#success-msg');
+        $success.text(message).addClass('show');
+        $success.fadeIn().delay(2000).fadeOut(function() {
+        $success.removeClass('show');
+        });
+    }
+
+    $(document).ready(function() {
+        fetchStudentList();
+    });
+    
+</script>
